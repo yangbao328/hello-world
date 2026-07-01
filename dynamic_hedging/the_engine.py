@@ -6,7 +6,7 @@ Created on Mon Jun 29 19:06:27 2026
 @author: tianyang
 
 This dynamic hedging engine simulates 
-stock movement, options and Greeks evolvement, order execution and P&L monitoring
+stock movement, European-style options and Greeks evolvement, order execution and P&L monitoring
 enabled by Market, Options and Hedger, the three fundamental classes. 
 
 Goals
@@ -18,16 +18,19 @@ Convey final P&L converges to zero (minus transaction costs) when the stock foll
 
 import numpy as np
 #import matplotlib.pyplot as plt
-#from scipy.stats import norm
-class Market:
+from scipy.stats import norm
+
+
+    
+class Market:   
+    
     '''
     Goal
     Simulate stock price via Geometric Brownian Motion
-    
+
     Note
     Log-transform GBM from exponential format to implement in vectorised additive manner
     '''
-    
     
     def __init__(self, S0, r, sigma, T, N, seed=None):
         '''
@@ -82,11 +85,10 @@ class Market:
                              + self.sigma * np.sqrt(self.T) * Z)
         return St
 
-market = Market(S0 = 100, mu = 0, sigma = 1, T = 1, N = 252, seed = 12)
+market = Market(S0 = 100, r = 0, sigma = 1, T = 1, N = 252, seed = 12)
 print(market.GBM_St()[-1])
         
 class Optins:
-    
     '''
     Goal
     Simulate current price of the option
@@ -95,16 +97,42 @@ class Optins:
     Notes
     Following risk-neutral measurement Q, Black-Scholes assumes drift-term of St is upon r
     Stock simulation in class Market shares risk-free rate r for St drift
+    Ct = e^(-rt) (FN(d1)-KN(d2))
     '''
     
-    def __init__(self):
-        pass
+    def __init__(self, K, T, r, sigma, seed):
         
+        self.K = K
+        self.T = T
+        self.r = r
+        self.sigma = sigma
+        self.rng = np.random.default_rng(seed)
+    
+    def d1(self, t=None):
         
+        nom = np.log(self.S0/self.K) + self.sigma**2/2*(self.T-t)
+    
+        dem = self.sigma*(self.T-t)**0.5
         
+        return nom/dem
         
+    def eu_call_BS(self, St, t):
         
+        d1 = self.d1()
+        d2 = d1 - self.sigma*(self.T-t)**0.5
         
+        Nd1 = norm.cdf(d1)
+        Nd2 = norm.cdf(d2)
+        
+        C = np.exp(-self.r*(self.T-t)) * (St*Nd1 - self.K*Nd2)
+        
+        return C
+    
+    def Delta(self):
+        
+        d1 = self.d1()
+        
+        return norm.cdf(d1)
         
         
         

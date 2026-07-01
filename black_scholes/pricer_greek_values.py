@@ -44,24 +44,7 @@ class BlackScholes:
         #d1 = (np.log(self.S0 / self.K) + (self.r + 0.5 * self.sigma**2) * self.T) / (self.sigma * np.sqrt(self.T))
         return d1
     
-    def Nd1Prime(self):
-        '''
-        N'(x) = 1/sqrt(2pi) * e^((-x^2)/2)
-        '''
-        
-        d1 = self.d1_t0()
-        
-        return 1/np.sqrt(np.pi*2) * np.exp((-d1**2)/2)
-    
-    def St_simu(self, n_paths):
-        
-        '''
-        St = S0 e^((r-sigma^2/2)T + sigma*sqrt(T)Z)
-        '''
-        Z = self.rng.normal(0, 1, size=n_paths)
-        St = self.S0 * np.exp((self.r-self.sigma**2/2)*self.T + self.sigma*(self.T**0.5)*Z)
-        
-        return St
+
     def BS_price_t0(self):
         
         #t = np.linspace(0, self.T, self.n_steps)
@@ -83,6 +66,16 @@ class BlackScholes:
         
         return C
     
+    def St_simu(self, n_paths):
+        
+        '''
+        St = S0 e^((r-sigma^2/2)T + sigma*sqrt(T)Z)
+        '''
+        Z = self.rng.normal(0, 1, size=n_paths)
+        St = self.S0 * np.exp((self.r-self.sigma**2/2)*self.T + self.sigma*(self.T**0.5)*Z)
+        
+        return St
+
     def MC_price(self, n_paths):
         
         St = self.St_simu(n_paths)
@@ -97,6 +90,15 @@ class BlackScholes:
         #Monte-Carlo simulation, average of discounted payoff according to European Call
         
         return discounted, po_PV_mean
+    
+    def Nd1Prime(self):
+        '''
+        N'(x) = 1/sqrt(2pi) * e^((-x^2)/2)
+        '''
+        
+        d1 = self.d1_t0()
+        
+        return 1/np.sqrt(np.pi*2) * np.exp((-d1**2)/2)
     
     def Delta(self):
         
