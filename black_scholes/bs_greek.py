@@ -21,8 +21,6 @@ The distribution is pushed out to the right by occasional large gains, but most 
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
-import scipy 
 from scipy.stats import norm
 
 class BlackScholes:
@@ -129,68 +127,7 @@ class BlackScholes:
         
         return self.S0 * norm.cdf(d1) * np.sqrt(self.T)
 
-paths = 10000
-S0 = 100
-
-bs = BlackScholes(S0=S0)
-price_BS = bs.BS_price_t0()
-discounted, price_MC = bs.MC_price(paths)
-
-# Greek Values  
-
-delta = []
-gamma = []
-theta = []
-vega = []
-greeks = {'delta':delta, 'gamma':gamma, 'theta':theta, 'vega':vega}
-
-S0s = range(50,151,5)
-for S0 in S0s:
+if __name__ == "__main__":
     
-    bs = BlackScholes(S0=S0)
-    delta.append(bs.Delta())
-    gamma.append(bs.Gamma())
-    theta.append(bs.Theta())
-    vega.append(bs.Vega())
-
-fig, axes = plt.subplots(4,1,figsize = (3,2),sharex=True)
-
-
-axes[0].plot(S0s, delta, label='Delta')
-axes[0].legend()
-axes[0].set_ylabel('Delta')
-
-
-axes[1].plot(S0s, gamma, label='Gamma')
-axes[1].legend()
-axes[1].set_ylabel('Gamma')
-axes[2].plot(S0s, theta, label='Theta')
-axes[2].legend()
-axes[2].set_ylabel('Theta')
-axes[3].plot(S0s, vega, label='Vega')
-axes[3].legend()
-axes[3].set_ylabel('Vega')
-
-print(f'Strike at {bs.K}')
-
-# 27June 10:37AM - 10:55AM
-'''
-To verify N(d2)(risk‑neutral probability of expiring ITM):
-
-Simulate 100,000 paths of St 
-under Q: St = S0 * e^((r-sigma^2/2)T + sigma*sqrt(T)Z) with Z∼N(0,1).
-
-Count the fraction of paths where St>K and the fraction should equal to N(d2)
-Compare the simulated fraction with norm.cdf(d2).
-'''
-
-paths = 100000
-
-bs = BlackScholes()
-Sts = bs.St_simu(paths)
-#St_K = [1 for St in Sts if St > bs.K]
-St_K = np.mean(Sts > bs.K)
-
-d2 = bs.d1_t0() - bs.sigma*(bs.T**0.5)
-
-print(St_K, norm.cdf(d2))
+    bs = BlackScholes()
+    print(bs.BS_price_t0())
