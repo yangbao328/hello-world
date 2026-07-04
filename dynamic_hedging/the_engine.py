@@ -15,6 +15,14 @@ Convey final P&L converges to zero (minus transaction costs) when the stock foll
 
 Limitations
 St simulation step shares N from rebalancing frequency
+
+Next Iteration
+
+A. separation of St simulation and rebalance frequency
+B. real‑world frictions
+    a. transaction cost
+    b. number of shares to the nearest integer
+C. barrier option pricer
 """
 
 import numpy as np
@@ -25,6 +33,7 @@ class Market:
     '''
     Goal
     Simulate stock price via Geometric Brownian Motion
+    Store simulated stock price to prevent swing due to unintentional random draws
 
     Note
     Log-transform GBM from exponential format to implement in vectorised additive manner
@@ -76,9 +85,7 @@ class Market:
         Y[1:] = np.log(self.S0) + np.cumsum(drift_Y+diffn_Y)# additive BM observed from dY that relies on initial dt and dBt
         
         self.St_path = np.exp(Y)
-        
-        #return self.St_path[step]
-    
+            
     def GBM_St(self, step):
         
         if self.St_path is None:
@@ -210,11 +217,16 @@ class Hedger:
     def final_trade(self):
         
         '''
+        St-(St-K)==K
         Position: short a call and long underlying security
         
-        Closing:  accrue cash interest;
-                  provide #security longed to the call pruchaser; 
-                  call payoff included as part of cash position
+        Closing:  accrue cash interest at T
+                  sell #security to receive St*N
+                  render option payoff to option purchaser, max(St-K,0); CASH SETTLEMENT
+
+                  provide #security longed to the call pruchaser
+                  receive K*# for rendering security;                    PHYSICAL DELIVERY
+
         '''
         N = self.market.N
         St = self.market.GBM_St(N)
