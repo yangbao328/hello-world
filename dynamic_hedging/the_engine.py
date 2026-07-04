@@ -11,17 +11,15 @@ enabled by Market, Options and Hedger, the three fundamental classes.
 
 Goals
 simulate cost of continuously delta‑hedging a short option equals the Black‑Scholes price,
-
 Convey final P&L converges to zero (minus transaction costs) when the stock follows the risk‑neutral process.
 
+Limitations
+St simulation step shares N from rebalancing frequency
 """
 
 import numpy as np
-#import matplotlib.pyplot as plt
 from scipy.stats import norm
 
-
-    
 class Market:   
     
     '''
@@ -41,7 +39,8 @@ class Market:
         self.sigma = sigma
         self.mu = r
         self.N = N
-        self.rng = np.random.default_rng(seed)#mean, sigma, size
+        self.rng = np.random.default_rng(seed)                 #mean, sigma, size
+        self.St_path = None
 
     def BM_Bt(self):
         '''
@@ -57,7 +56,7 @@ class Market:
         
         return dBt, Bt
     
-    def GBM_St(self,step):
+    def St_simulate(self):
         '''
         Y = lnX
         St = X = e^Y
@@ -74,10 +73,21 @@ class Market:
         
         Y = np.zeros(self.N+1)
         Y[0] = np.log(self.S0)
-        Y[1:] = np.log(self.S0) + np.cumsum(drift_Y+diffn_Y) # additive BM observed from dY that relies on initial dt and dBt
+        Y[1:] = np.log(self.S0) + np.cumsum(drift_Y+diffn_Y)# additive BM observed from dY that relies on initial dt and dBt
         
-        return np.exp(Y)[step]
+        self.St_path = np.exp(Y)
+        
+        #return self.St_path[step]
     
+    def GBM_St(self, step):
+        
+        if self.St_path is None:
+            self.St_simulate()
+            return self.St_path[step]
+            
+        else:
+            return self.St_path[step]
+            
     def GBM_St_terminal(self):
         
         Z = self.rng.normal(0, 1)
@@ -85,8 +95,6 @@ class Market:
                              + self.sigma * np.sqrt(self.T) * Z)
         return St
 
-
-        
 class Options:
     '''
     Goal
@@ -123,61 +131,122 @@ class Options:
         Nd1 = norm.cdf(d1)
         Nd2 = norm.cdf(d2)
         
-        C = np.exp(-self.r*(self.T-t)) * (St*Nd1 - self.K*Nd2)
+        #C = np.exp(-self.r*(self.T-t)) * (St*Nd1 - self.K*Nd2)
+        C = St * Nd1 - self.K * np.exp(-self.r * (self.T - t)) * Nd2
         
         return C
     
-    def Delta(self, t):
+    def Delta(self, St, t):
         
         d1 = self.d1(St, t)
         
         return norm.cdf(d1)
-    
+
     
 class Hedger:
+    '''
+    this hedger takes positions of shorting call and longing underlying secuirty
     
-    def __init__(self, market, option, N_steps):
-        
-        self.market = market
-        self.option = option
-        self.N = market.N
+    Goal
+        Reflect number of shares to purchase at timestamps as Delta fluctuates
+        Collect interest on cash or log interest on loan
+        Compute P&L when t reaches T
+    '''
+    def __init__(self, market, options):
+        self.market = market                                #stock price at timestamps
+        self.options = options                              #option price and delta for hedging purpose
+        self.T = market.T
         self.dt = market.T/market.N
-        self.stock = 0.0
-        self.cash = 0.0
-        self.short_call = True #option sell perspective
+        self.cash = 0.0                                     #to simulate P&L
+        self.stock_shares = 0.0                             #number of shares to hedge
+        self.short_call = True                              #short call and long security
+        #self.N_steps = N_steps                             #duplicated from options N
         
-        #set up at t = 0
-        S0 = market.GBM_St(0)
-        self.cash = option.eu_call_BS(S0, 0)
-        target_delta = option.Delta(0)
-        self.cash -= S0 * target_delta
-        self.stock = target_delta
-        print(f'PRINT{self.cash}, {target_delta}')
+        #initiate T=0 as beginning state
+        S0 = self.market.GBM_St(0)        
+        target_delta = self.options.Delta(S0,0)
+        self.cash = self.options.eu_call_BS(S0, 0)          #short call
+        self.cash -= S0*target_delta                        #long stock
+        self.stock_shares = target_delta
 
-    def rebalance():
-        pass
+    def rebalance_step(self, step):
+        
+
+        self.cash *= np.exp(self.options.r*self.dt)
+        
+        St = self.market.GBM_St(step)
+        target_delta = self.options.Delta(St, self.dt*step)
+        hedged_delta= target_delta - self.stock_shares
+        
+        self.cash -= hedged_delta * St
+        self.stock_shares = target_delta
+        
     
-S0 = 100
-K = 90
-r = 0
-sigma = 1
-T = 1
-N = 252
+    def rebalance(self):
+        for step in range(1, self.market.N):
+            self.rebalance_step(step)
+        
+    def rebalance_loop(self):  
+        
+        '''
+        Rebalance and update for intermediate timestamps
+        '''
+        #book = {0:(self.stock_shares, self.market.GBM_St(0), self.cash)}
+        
+        for step in range(1,self.market.N):
+            
+            self.cash *= np.exp(self.options.r*self.dt)      #interest on loan from 0 to t1
 
-market = Market(S0 = S0, r = r, sigma = sigma, T = T, N = N)
-#t = np.linspace(0, T, N)
-St = market.GBM_St(0)
-options = Options(K=K, T=T, r=r, sigma=sigma)
-options.eu_call_BS(100, t=0.0)
-options.Delta(t=0)
+            St = self.market.GBM_St(step)
+            t = step*self.dt
+            
+            target_delta = self.options.Delta(St, t)
+            
+            hedged_delta = target_delta - self.stock_shares
+            self.cash -= St * hedged_delta
+            self.stock_shares = target_delta
 
-hedger = Hedger(market, options, N)
+    
+    def final_trade(self):
         
+        '''
+        Position: short a call and long underlying security
         
+        Closing:  accrue cash interest;
+                  provide #security longed to the call pruchaser; 
+                  call payoff included as part of cash position
+        '''
+        N = self.market.N
+        St = self.market.GBM_St(N)
         
+        self.cash *= np.exp(self.options.r*self.dt)         #accrue interest at T
+        self.cash += St*self.stock_shares                   #close longing stock positions by selling at St
+        #selling security and receive St
+
+        if self.short_call == True:
+            payoff = -max(St-self.options.K,0)                   
+        #pay option purchaser short-call payoff (St-K)
+        #!!!   np.max and np.maximum 
+        #where np.max treats 0 as axis argument rather than floor
         
-        
-        
-        
-        
-        
+        self.cash += payoff
+        #St-(St-K) = K, final P&L after cash settlement
+
+        return self.cash
+    
+    
+S0 = 100; K = 90; r = 0; sigma = 1; T = 1; N = 252
+
+pnl_list = []
+
+for _ in range(1000):
+    market = Market(S0 = S0, r = r, sigma = sigma, T = T, N = N)
+    options = Options(K=K, T=T, r=r, sigma=sigma)
+    hedger = Hedger(market, options)
+    hedger.rebalance()
+    pnl = hedger.final_trade()
+
+    pnl_list.append(pnl)
+    
+print(f'Mean P&L is {np.mean(pnl_list)}')
+print(f'Standard deviation P&L is {np.std(pnl_list)}')
