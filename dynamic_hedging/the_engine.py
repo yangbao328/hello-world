@@ -82,7 +82,7 @@ class Market:
         
         Y = np.zeros(self.N+1)
         Y[0] = np.log(self.S0)
-        Y[1:] = np.log(self.S0) + np.cumsum(drift_Y+diffn_Y)# additive BM observed from dY that relies on initial dt and dBt
+        Y[1:] = np.log(self.S0) + np.cumsum(drift_Y+diffn_Y)   #additive BM observed from dY that relies on initial dt and dBt
         
         self.St_path = np.exp(Y)
             
@@ -159,33 +159,39 @@ class Hedger:
         Collect interest on cash or log interest on loan
         Compute P&L when t reaches T
     '''
-    def __init__(self, market, options):
-        self.market = market                                #stock price at timestamps
-        self.options = options                              #option price and delta for hedging purpose
+    def __init__(self, market, options, trz_cost):
+        self.market = market                                   #stock price at timestamps
+        self.options = options                                 #option price and delta for hedging purpose
         self.T = market.T
         self.dt = market.T/market.N
-        self.cash = 0.0                                     #to simulate P&L
-        self.stock_shares = 0.0                             #number of shares to hedge
-        self.short_call = True                              #short call and long security
-        #self.N_steps = N_steps                             #duplicated from options N
+        self.cash = 0.0                                        #to simulate P&L
+        self.stock_shares = 0.0                                #number of shares to hedge
+        self.short_call = True                                 #short call and long security
+        #self.N_steps = N_steps                                #duplicated from options N
+        self.trz_cost = trz_cost
         
         #initiate T=0 as beginning state
         S0 = self.market.GBM_St(0)        
         target_delta = self.options.Delta(S0,0)
-        self.cash = self.options.eu_call_BS(S0, 0)          #short call
-        self.cash -= S0*target_delta                        #long stock
+        self.cash = self.options.eu_call_BS(S0, 0)             #short call
+        self.cash -= S0*target_delta*(1+self.trz_cost)         #long stock
         self.stock_shares = target_delta
 
     def rebalance_step(self, step):
         
-
+        
         self.cash *= np.exp(self.options.r*self.dt)
         
         St = self.market.GBM_St(step)
         target_delta = self.options.Delta(St, self.dt*step)
         hedged_delta= target_delta - self.stock_shares
         
-        self.cash -= hedged_delta * St
+        if hedged_delta > 0:
+            self.cash -= hedged_delta * St * (1+self.trz_cost) #purchase to adjust delta
+            
+        elif hedged_delta < 0:
+            self.cash -= hedged_delta * St * (1-self.trz_cost) #sell to adjust delta
+            
         self.stock_shares = target_delta
         
     
@@ -202,7 +208,7 @@ class Hedger:
         
         for step in range(1,self.market.N):
             
-            self.cash *= np.exp(self.options.r*self.dt)      #interest on loan from 0 to t1
+            self.cash *= np.exp(self.options.r*self.dt)        #interest on loan from 0 to t1
 
             St = self.market.GBM_St(step)
             t = step*self.dt
@@ -210,7 +216,11 @@ class Hedger:
             target_delta = self.options.Delta(St, t)
             
             hedged_delta = target_delta - self.stock_shares
-            self.cash -= St * hedged_delta
+            if hedged_delta > 0:
+                self.cash -= hedged_delta * St * (1+self.trz_cost)
+            elif hedged_delta < 0:
+                self.cash -= hedged_delta * St * (1-self.trz_cost)
+            
             self.stock_shares = target_delta
 
     
@@ -222,17 +232,18 @@ class Hedger:
         
         Closing:  accrue cash interest at T
                   sell #security to receive St*N
-                  render option payoff to option purchaser, max(St-K,0); CASH SETTLEMENT
+                  render option payoff to option purchaser, max(St-K,0);    CASH SETTLEMENT
 
                   provide #security longed to the call pruchaser
-                  receive K*# for rendering security;                    PHYSICAL DELIVERY
+                  receive K*# for rendering security;                       PHYSICAL DELIVERY
 
         '''
         N = self.market.N
         St = self.market.GBM_St(N)
         
-        self.cash *= np.exp(self.options.r*self.dt)         #accrue interest at T
-        self.cash += St*self.stock_shares                   #close longing stock positions by selling at St
+        self.cash *= np.exp(self.options.r*self.dt)            #accrue interest at T
+        self.cash += St*self.stock_shares                      #close longing stock positions by selling at St
+        self.cash -= St*self.stock_shares*self.trz_cost
         #selling security and receive St
 
         if self.short_call == True:
@@ -248,10 +259,10 @@ class Hedger:
 
 if __name__ == "__main__":
     
-    S0 = 100; K = 90; r = 0; sigma = 1; T = 1; N = 252
+    S0 = 100; K = 90; r = 0; sigma = 1; T = 1; N = 252; transaction_cost = 0.001
 
 
     market = Market(S0 = S0, r = r, sigma = sigma, T = T, N = N)
     options = Options(K=K, T=T, r=r, sigma=sigma)
-    hedger = Hedger(market, options)
+    hedger = Hedger(market, options, trz_cost=transaction_cost)
     print(f'St is {market.GBM_St(N):.3f}')
