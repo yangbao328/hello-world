@@ -210,12 +210,12 @@ class Hedger:
     
     
     def rebalance(self):
+        
         for step in range(1, self.market.N):
             self.rebalance_step(step)
         
         
     def rebalance_loop(self):  
-        
         '''
         Rebalance and update for intermediate timestamps
         '''
@@ -240,7 +240,6 @@ class Hedger:
 
     
     def final_trade(self):
-        
         '''
         St-(St-K)==K
         Position: short a call and long underlying security
