@@ -1,12 +1,12 @@
 # Dynamic Hedging Engine
 Market, Options, Hedger
 
-This dynamic delta-hedging engine is consisted of stock simulation, European call option pricer and delta, and hedging operations through time; positions of underlying security is continuously adjuste. The hedger is in role of counterparty of European-call purchaser, therefore holds short-call and long-security positions to offset fluctuations from the call purchase.  
-Stock simulation follows geometric brownian motion and is vectorized via log-normal transformation for computation efficiency; European call pricer is implemented following Black-Scholes formula under risk-neutral measurement Q, of which risk-free rate is applied for discount and interest, and an arbitrage-free replication is allowed to be feasible. This project verifies with r=0, the average PnL is around 0, and explores impacts of transaction cost and hedging threshold has on simulated PnL.
+This dynamic delta-hedging engine is consisted of stock simulation, European call option pricer and delta, and hedging operations through time. The hedger is in role of counterparty of European-call purchaser, therefore holds short-call and long-security positions to offset fluctuations from the call purchase.  
+This project verifies with r=0, the average PnL is around 0, and explores impacts of transaction cost and hedging threshold has on simulated PnL.
 
 # Motivations
 
-Stock...feasible. In realized executions, this project simulates frictions such as transaction cost and illustrates trade-off between reducing cost and un-hedged exposure. This project demonstrates
+Stock simulation follows geometric brownian motion and is vectorized via log-normal transformation for computation efficiency; European call pricer is implemented following Black-Scholes formula under risk-neutral measurement Q, of which risk-free rate is applied for discount and interest, and an arbitrage-free replication is allowed to be feasible. In realized executions, this project simulates frictions such as transaction cost and illustrates trade-off between reducing cost and un-hedged exposure. Demonstrations this project provides are
 a. zero-mean of simulated PnL under risk-neutral measurement;
 b. negative impact of proportional transaction cost;
 c. trade-off between cost reduction and un-hedged delta exposure via hedging threshold.
