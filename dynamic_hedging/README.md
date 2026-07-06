@@ -13,7 +13,7 @@ c. trade-off between cost reduction and un-hedged delta exposure via hedging thr
 
 # Mathematical Description
 
-Stock price follows geometric Brownian Motion $dS_t = r S_t dt + \sigma S_t dB_t$ and is implemented with vectorised log-transformation Y = lnS_t. Option pricer assumes Black-Scholes formula, of which $C_t = e^{-rt} (FN(d_1) - KN(d_2)).
+Stock price follows geometric Brownian Motion $dS_t = r S_t dt + \sigma S_t dB_t$ and is implemented with vectorised log-transformation Y = lnS_t. Option pricer assumes Black-Scholes formula, of which $C_t = e^{-rt} (FN(d_1) - KN(d_2))$.
 With short-call and long-security positions, initial position is funded by cash from shorting a call, and funds for rebalancing is borrowed at rate r while interests on cash is earned at rate r as well. Number of shares to be held at intermediate timestamp is measured of the option's delta, $N(d_1)$, and security-position rebalancing occurs at each step when hedging threshold is being met. Final PnL is computed in cash settlement, with security sold, interest accrued and call option pay-off rendered to purchaser reaching time T.
  
 # Project Components
