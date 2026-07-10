@@ -1,11 +1,52 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jul  7 21:06:46 2026
+Modified on Thu Jul 9
 
 @author: tianyang
 
-ORGANIZE IN MARKDOWN FILE
+Girsanov Theorem
+    dMt = MtAtdBt, M0 = 1
+  if Wt = Bt - integral_{0}^(t) A(s)ds
+then Wt is a standard brownian motion and dBt = Atdt + dWt in Q measurement
+
+Key concepts
+        Bt in Mt-premis
+        Bt in P-probability measurement
+        Bt in Q-probability measurement
+  Bt_tilde in Q-probability measurement
+"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
+Created on Tue Jul  7 21:06:46 2026
+
+ORGANIZE IN MARKDOWN FILEs
 
 Girsanov Theorem
 With standard Brownian Motion Bt~N(0, deltat) that is under physical probability P, 
