@@ -43,8 +43,9 @@ from scipy.stats import norm
 
 class BrownianMotion:
     
-    def __init__(self, T=1, N=252, seed=None):
-        self.mean = 0
+    def __init__(self, mu, sigma, T=1, N=252, seed=None):
+        self.mean = mu
+        self.sigma = sigma
         self.var = 1
         self.T = T
         self.N = N
@@ -183,7 +184,7 @@ class BrownianMotion:
         return t, f_dir, f_tx
 
 # 28June2026
-bm = BrownianMotion(T=1, N=252)  
+bm = BrownianMotion(mu=0, sigma=1, T=1, N=252)  
 
 t_inv, lnx_sim, lnx_vef = bm.ito_lnx_vects()     
 
@@ -193,9 +194,10 @@ plt.plot(t_inv, lnx_sim, label='$ln_t^2$ direct')
 plt.plot(t_inv, lnx_vef, '--', label='SDE (exact)')
 plt.legend()
 plt.show()   
+
 # 24June2026
 
-bm = BrownianMotion(T=1, N=252)  
+bm = BrownianMotion(mu=0, sigma=1, T=1, N=252)  
 t_interval, W, W2_sim, W2_vef = bm.ito_verif_vector()  
 max_error = np.max(np.abs(W2_sim-W2_vef))
 print(f"Maximum error is {max_error:.2e}")
@@ -205,7 +207,7 @@ plt.legend()
 plt.show()
 #bm.BM_SDE(fdx=2x, fd2x=2)
 
-bm = BrownianMotion(T=1, N=252)  
+bm = BrownianMotion(mu=0, sigma=1, T=1, N=252)  
 t_interval, Xt_dir_geom, Xt_sde_geom = bm.ito_verif_vector_geom()  
 max_error = np.max(np.abs(Xt_dir_geom-Xt_sde_geom))
 print(f"Maximum error is {max_error:.2e}")
@@ -223,7 +225,7 @@ plt.show()
 steps_sample = [10, 100, 1000, 10000]
 sum_steps = {}
 for step in steps_sample:
-    bm = BrownianMotion(T=1, N=step)
+    bm = BrownianMotion(mu=0, sigma=1, T=1, N=step)
     dW, W = bm.BM_simulation()
     sum_dW_sq = np.sum(dW**2)
     sum_steps[step] = sum_dW_sq
@@ -246,7 +248,7 @@ for step in steps_sample:
 """
 paths = 10000
 simulations = np.zeros(paths)
-bm = BrownianMotion(T=1, N=252) 
+bm = BrownianMotion(mu=0, sigma=1, T=1, N=252) 
 
 for i in range(paths):
     #if to specify seed = 12 in this loop, all 10000 paths will follow the same sequence

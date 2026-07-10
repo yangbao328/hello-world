@@ -8,39 +8,57 @@ Modified on Thu Jul 9
 Girsanov Theorem
     dMt = MtAtdBt, M0 = 1
   if Wt = Bt - integral_{0}^(t) A(s)ds
-then Wt is a standard brownian motion and dBt = Atdt + dWt in Q measurement
+then Wt is a standard brownian motion and dBt = Atdt + dWt in Q measurement.
+  log(Mt) = 
+  Product_{i=1}^{n}  (1+-A(t)*deltat**0.5)
+                  =  A(t)Wt - A(t)**2 Sum_{i=1}^{n} (deltat/2)
+                  =  A(t)Wt - A(t)**2 * T/2
+  Mt = exp(A(t)Wt - A(t)**2 * T/2)
+dSt = u*St*dt + sigma*St*dWt^P 
+dSt = r*St*dt + sigma*St*dWt^Q
+dWt^P = dWt^Q + theta dt
 
-Key concepts
-        Bt in Mt-premis
+dSt = u*St*dt + sigma*St*(dWt^Q + theta*dt)
+dSt = u*St*dt + sigma*St*theta*dt + sigma*St*dWt^Q 
+    = (u+sigma*theta)*St*dt + sigma*St*dWt^Q
+u+sigma*theta = r => theta = (r-mu)/sigma
+
+Key distinctions
+        Bt in Mt-premise
         Bt in P-probability measurement
         Bt in Q-probability measurement
   Bt_tilde in Q-probability measurement
+  
+  
+Simulate a stock under the physical-probability measure P with mu = 0.1
+Implement the likelihood-ratio weighting to price a call under Q
+
 """
 
+import numpy as np
 
 
+S0 = 100; K = 90; mu = 0.1; r = 0; 
+T = 1; sigma = 1.0; n_paths = 1000
 
 
+#Stock price with mu = 0.1
+Z = np.random.default_rng().normal(0, 1, n_paths)               # Monte Carlo
+Bt = Z * T**0.5                                                 # N~(0,deltat)
+St = S0 * np.exp((mu - 0.5 * sigma**2) * T + sigma * Bt)              
+
+#Compute Mt = exp(theta*Bt- 0.5*theta*deltaT) where theta = (r-mu)/sigma = -(mu-r)/sigma
+#Mt, likelihood ratio, dQ/dP""
+theta = (r - mu)/sigma
+Mt = np.exp(theta*Bt - 0.5*theta**2*T)
+
+#Weight the discounted payoff by Mt and average
+payoff = np.maximum(St-K,0)
+price = np.exp(-r*T) * np.mean(payoff * Mt)
+print(price)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#%%
 
 
 """
