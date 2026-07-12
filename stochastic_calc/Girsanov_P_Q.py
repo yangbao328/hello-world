@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-''' July 11
-clear concepts in Girsanov theorem: Partition of q -> Mt; sigma choice in BS and theta 
-clean up BM quadratic variation - +6pm
-
-'''
-
-
 """
 Modified on Thu Jul 9
 
 @author: tianyang
+
+single risk-free rate to represent the stock price's drift is essential 
+because otherwise different participants would model their expectation differently 
+hence the market doesnt have a universal price for one stock; 
+then with single risk-free rate in Q-measurement, 
+it aggregates market participants as "market" and 
+hence the market price of risk theta
+
 
 Girsanov Theorem
     dMt = MtAtdBt, M0 = 1
@@ -30,16 +31,6 @@ dSt = u*St*dt + sigma*St*(dWt^Q + theta*dt)
 dSt = u*St*dt + sigma*St*theta*dt + sigma*St*dWt^Q 
     = (u+sigma*theta)*St*dt + sigma*St*dWt^Q
 u+sigma*theta = r => theta = (r-mu)/sigma
-
-Key distinctions
-        Bt in Mt-premise
-        Bt in P-probability measurement
-        Bt in Q-probability measurement
-  Bt_tilde in Q-probability measurement
-  
-  
-Simulate a stock under the physical-probability measure P with mu = 0.1
-Implement the likelihood-ratio weighting to price a call under Q
 
 """
 
