@@ -5,6 +5,9 @@
 Modified on Thu Jul 9
 
 @author: tianyang
+Given conversion, Girsanov theorem, of a with-drift brownian motion to 
+shiftless BM in Q-measurement,
+it enables to model process under one risk-free rate for discounting
 
 single risk-free rate to represent the stock price's drift is essential 
 because otherwise different participants would model their expectation differently 
