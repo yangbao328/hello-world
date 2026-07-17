@@ -84,6 +84,46 @@ class Heston_Volatility:
         
         return Call_MC
     
+    
+    def implied_vol(self, K, sigma_low, sigma_high, n_paths):
+        '''
+        C_BS = S0N(d1) - e^(-rT) KN(d2)
+        Find sigma_BS such that C_BS = C_heston given S0, K, T and r
+        '''
+        r=self.r; T=self.T; S0=self.S0; T0=T-T
+    
+        #function below and ST_simulator introduces MC errors as
+        #new Z1 Z2 are generated for each strike K
+        call_heston = self.European_Call_MC_simu(K, n_paths)
+        #print(f"Call, Heston:{call_heston:.3f}, \
+        #        Call, sigma lower bound:{call_BS_low:.3f}, \
+        #        Call, sigma higher bound: {call_BS_high:.3f}")
+        
+        f = lambda sigma: Options(K=K, sigma=sigma, r=r, T=T).eu_call_BS(S0, T0) - call_heston
+        
+        return brentq(f, sigma_low, sigma_high)
+    
+    def implied_vol_smile(self, Ks, sigma_low, sigma_high, n_paths):
+        '''
+        Generate St and share it with MC-Call simulation across Ks
+        to reduce Monte-Carlo uncorrelated erros
+        '''        
+        r=self.r; T=self.T; S0=self.S0; T0=T-T
+        St = self.St_heston_simu(n_paths)
+        
+        ivol = []
+        
+        for K in Ks:
+            
+            payoff = np.maximum(St-K,0)
+            call_heston = np.exp(-r*T)*np.mean(payoff)
+            f = lambda sigma: Options(K=K, sigma=sigma, r=r, T=T).eu_call_BS(S0, T0) - call_heston
+            iv = brentq(f, sigma_low, sigma_high)
+            
+            ivol.append(iv)
+        
+        return ivol
+    
     def St_heston(self):
         
         N = self.N
@@ -100,27 +140,6 @@ class Heston_Volatility:
             St[i+1] = St[i] + self.r * St[i] * self.dt + Vt[i]**0.5 * St[i] * dWtS
         
         return St
-    
-    def implied_vol(self, K, sigma_low, sigma_high, n_paths):
-        '''
-        C_BS = S0N(d1) - e^(-rT) KN(d2)
-        Find sigma_BS such that C_BS = C_heston given S0, K, T and r
-        '''
-        r=self.r; T=self.T; S0=self.S0; T0=T-T
-    
-        #options = Options(K=self.K, sigma=self.v0, r=self.r, T=self.T)
-        #call_BS_low = Options(K=K, sigma=sigma_low, r=r, T=T).eu_call_BS(self.S0, 0)
-        #call_BS_high = Options(K=K, sigma=sigma_high, r=r, T=T).eu_call_BS(self.S0, 0)
-
-        call_heston = self.European_Call_MC_simu(K, n_paths)
-        #print(f"Call, Heston:{call_heston:.3f}, \
-        #        Call, sigma lower bound:{call_BS_low:.3f}, \
-        #        Call, sigma higher bound: {call_BS_high:.3f}")
-        
-        f = lambda sigma: Options(K=K, sigma=sigma, r=r, T=T).eu_call_BS(S0, T0) - call_heston
-        
-        return brentq(f, sigma_low, sigma_high)
-    
     def European_Call_MC(self, K, n_paths):
         
         St_MC = np.zeros(n_paths)
@@ -139,56 +158,24 @@ class Heston_Volatility:
         return call_MC
 
 
-T = 1; N = 252; rho = -0.7; kappa = 0.02; theta = 0.12
-sigmav = 0.5; v0 = .3; r = 0.1; S0=100; K=90
+if __name__ == '__main__':
+    T = 1; N = 252; rho = -0.7; kappa = 0.02; theta = 0.12
+    sigmav = 0.5; v0 = .3; r = 0.1; S0=100; K=90
 
-heston = Heston_Volatility(T=T, N=N, rho=rho, kappa=kappa, theta=theta, 
-                           sigma_v = sigmav, v0 = v0, r = r, S0 = S0)
-St_single = heston.St_heston()
-european_C = heston.European_Call_MC(90, 1000)
-eu_MC = heston.European_Call_MC_simu(90, 1000)
-print(f"Single-path European Call:{np.mean(heston.St_heston_simu(1000)):.3f}")
-print(f"Monte-Carlo multi-path European Call:{eu_MC:.3f}")
+    heston = Heston_Volatility(T=T, N=N, rho=rho, kappa=kappa, theta=theta, 
+                               sigma_v = sigmav, v0 = v0, r = r, S0 = S0)
+    options = Options(K=K, sigma = v0**0.5, r = r, T = T)
 
-options = Options(K=K, sigma = v0**0.5, r = r, T = T)
-eu_BS = options.eu_call_BS(S0, 0)
-print(f"Black-Scholes European Call:{eu_BS:.3f}")
+    european_C = heston.European_Call_MC(90, 1000)
+    eu_MC = heston.European_Call_MC_simu(90, 1000)
+    print(f"Single-path European Call:{np.mean(heston.St_heston_simu(1000)):.3f}")
+    print(f"Monte-Carlo multi-path European Call:{eu_MC:.3f}")
 
-f = lambda sigma: Options(K=K, sigma = sigma, r = r, T = T).eu_call_BS(S0, 0) - european_C
-brentq(f, 0.5, 1)
-
-strikes = np.arange(75, 135, 2)
-ivols = []
-calls = []
-for K in strikes:
+    eu_BS = options.eu_call_BS(S0, 0)
+    print(f"Black-Scholes European Call:{eu_BS:.3f}")
     
-    ivols.append(heston.implied_vol(K, 0.05, 1, 1000))
-    calls.append(heston.European_Call_MC_simu(K, 1000))
-
-plt.plot(strikes, ivols, 'o-', markersize=3)
-plt.xlabel('Strike')
-plt.ylabel('Implied Volatility')
-plt.show()
-
-
-fig, ax1 = plt.subplots()
-ax1.set_xlabel('Strike K')
-ax1.set_ylabel('Implied Volatility', color='lightpink')
-ax1.plot(strikes, ivols, color='lightpink', marker='o', markersize=2)
-ax1.tick_params(axis='y', labelcolor='lightpink')
-
-ax2 = ax1.twinx()
-ax2.set_ylabel('Call, Heston', color='gray')
-ax2.plot(strikes, calls, color='gray')
-ax2.tick_params(axis='y', labelcolor='gray')
-
-fig.tight_layout()
-plt.show()
-#print(f"Risk-neutral expectation for St is {S0 * np.exp(r*T):.3f}")
-
-
-
-
+    f = lambda sigma: Options(K=K, sigma = sigma, r = r, T = T).eu_call_BS(S0, 0) - european_C
+    brentq(f, 0.5, 1)
 
 
 
