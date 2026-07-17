@@ -14,10 +14,9 @@ import sys
 import os
 import numpy as np
 from scipy.optimize import brentq
-
+import matplotlib.pyplot as plt
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'dynamic_hedging'))
 from the_engine import Options
-
 
 class Heston_Volatility:
     
@@ -138,7 +137,7 @@ class Heston_Volatility:
         
         return call_MC
     
-T = 1; N = 252; rho = -0.7; kappa = 0.1; theta = 0.12
+T = 1; N = 252; rho = -0.7; kappa = 0.02; theta = 0.12
 sigmav = 0.5; v0 = .3; r = 0.1; S0=100; K=90
 
 heston = Heston_Volatility(T=T, N=N, rho=rho, kappa=kappa, theta=theta, 
@@ -156,12 +155,33 @@ print(f"Black-Scholes European Call:{eu_BS:.3f}")
 f = lambda sigma: Options(K=K, sigma = sigma, r = r, T = T).eu_call_BS(S0, 0) - european_C
 brentq(f, 0.5, 1)
 
-strikes = np.arange(75, 125, 3)
-ivs = []
+strikes = np.arange(75, 135, 2)
+ivols = []
+calls = []
 for K in strikes:
-    ivs.append(heston.implied_vol(K, 0.05, 1, 1000))
     
+    ivols.append(heston.implied_vol(K, 0.05, 1, 1000))
+    calls.append(heston.European_Call_MC_simu(K, 1000))
 
+plt.plot(strikes, ivols, 'o-', markersize=3)
+plt.xlabel('Strike')
+plt.ylabel('Implied Volatility')
+plt.show()
+
+
+fig, ax1 = plt.subplots()
+ax1.set_xlabel('Strike K')
+ax1.set_ylabel('Implied Volatility', color='lightpink')
+ax1.plot(strikes, ivols, color='lightpink', marker='o', markersize=2)
+ax1.tick_params(axis='y', labelcolor='lightpink')
+
+ax2 = ax1.twinx()
+ax2.set_ylabel('Call, Heston', color='gray')
+ax2.plot(strikes, calls, color='gray')
+ax2.tick_params(axis='y', labelcolor='gray')
+
+fig.tight_layout()
+plt.show()
 #print(f"Risk-neutral expectation for St is {S0 * np.exp(r*T):.3f}")
 
 
