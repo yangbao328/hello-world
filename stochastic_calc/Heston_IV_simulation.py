@@ -16,16 +16,19 @@ from Heston_Implied_Vol import Heston_Volatility
 
 
 T = 1; N = 252; rho = -0.0; kappa = 0.1; theta = 0.12
-sigmav = 0.5; v0 = .3; r = 0.1; S0=100; K=90
+sigmav = 0.5; v0 = .3; r = 0.1; S0=100; K=90; n_paths = 30000
+sigma_low = 0.05; sigma_high = 1
+strikes = np.arange(80, 135, 2)
+
 heston = Heston_Volatility(T=T, N=N, rho=rho, kappa=kappa, theta=theta, 
                                sigma_v = sigmav, v0 = v0, r = r, S0 = S0)
-strikes = np.arange(80, 135, 2)
+
 ivols = []
 calls = []
 for K in strikes:
     
-    ivols.append(heston.implied_vol(K, 0.05, 1, 30000))
-    calls.append(heston.European_Call_MC_simu(K, 30000))
+    ivols.append(heston.implied_vol(K, sigma_low, sigma_high, n_paths))
+    calls.append(heston.European_Call_MC_simu(K, n_paths))
 
 plt.plot(strikes, ivols, 'o-', markersize=3)
 plt.xlabel('Strike')
@@ -49,12 +52,12 @@ plt.title('Implied Volatility, individual MC-simulation at strike Ks')
 plt.show()
 
 #IV Smile and MC-simulation error reduced
-iv_smile = heston.implied_vol_smile(strikes, 0.05, 1, 30000)
+iv_smiles = heston.implied_vol_smile(strikes, sigma_low, sigma_high, n_paths)
 
 fig, ax1 = plt.subplots()
 ax1.set_xlabel('Strike K')
 ax1.set_ylabel('Implied Volatility', color='lightpink')
-ax1.plot(strikes, iv_smile, color='lightpink', marker='o', markersize=2)
+ax1.plot(strikes, iv_smiles, color='lightpink', marker='o', markersize=2)
 ax1.tick_params(axis='y', labelcolor='lightpink')
 
 ax2 = ax1.twinx()
@@ -71,7 +74,7 @@ plt.show()
 
 # Verify call price and implied volatility 
 for K in [70, 100, 130]:
-    hp = heston.European_Call_MC_simu(K, 50000)
+    hp = heston.European_Call_MC_simu(K, n_paths)
     bp = Options(K=K, sigma = v0**0.5, r = r, T = T).eu_call_BS(S0, T-T)
     print(f"Strike at {K}, heston-call price {hp}, BS-call price {bp}")
 

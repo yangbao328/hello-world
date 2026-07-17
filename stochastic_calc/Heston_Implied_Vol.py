@@ -14,7 +14,6 @@ import sys
 import os
 import numpy as np
 from scipy.optimize import brentq
-import matplotlib.pyplot as plt
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'dynamic_hedging'))
 from the_engine import Options
 
@@ -74,7 +73,6 @@ class Heston_Volatility:
             S = S + self.r*S*self.dt + v_left**0.5*S*dWtS[:,t]          #simualte S using v_t-1 to maintain correlation
             
         return S #n_paths simulation, each with N (time)steps
-    
     
     def European_Call_MC_simu(self, K, n_paths):
         
@@ -140,6 +138,7 @@ class Heston_Volatility:
             St[i+1] = St[i] + self.r * St[i] * self.dt + Vt[i]**0.5 * St[i] * dWtS
         
         return St
+    
     def European_Call_MC(self, K, n_paths):
         
         St_MC = np.zeros(n_paths)
@@ -156,7 +155,6 @@ class Heston_Volatility:
         call_MC = np.exp(-self.r*self.T) * np.mean(payoff)
         
         return call_MC
-
 
 if __name__ == '__main__':
     T = 1; N = 252; rho = -0.7; kappa = 0.02; theta = 0.12
