@@ -52,8 +52,8 @@ class Heston_Volatility:
     
     def St_heston_simu(self, n_paths):
         '''
-        Vectorise large-number path simulations for St
-        Maintain time-wise loop for St and Vt
+        Vectorise n-path simulations for St over N timestamps
+        Maintain time-wise loop for St and Vt as dependent on St-1 and Vt-1 respectively
         '''
         
         S = np.full(n_paths, self.S0, dtype=float)
@@ -72,7 +72,7 @@ class Heston_Volatility:
             
             S = S + self.r*S*self.dt + v_left**0.5*S*dWtS[:,t]          #simualte S using v_t-1 to maintain correlation
             
-        return S #n_paths simulation, each with N (time)steps
+        return S 
     
     def European_Call_MC_simu(self, K, n_paths):
         
@@ -123,6 +123,9 @@ class Heston_Volatility:
         return ivol
     
     def St_heston(self):
+        '''
+        One-path stock price simulation, N timestamps
+        '''
         
         N = self.N
         St = np.zeros(N+1); St[0] = self.S0
