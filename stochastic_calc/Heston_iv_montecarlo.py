@@ -8,8 +8,8 @@ Created on Mon Jul 13 19:18:37 2026
 Goals
 Implement security price with dynamic St-volatility, under Q-probability measurement
     stock return follows risk-free interest rate 
-    St-diffusion and Vt-diffusion are correlated by rho
-    initiate St with S0 and v0
+    St-diffusion and Vt-diffusion are correlated by rho, <dWtS, dWtv> = rho dt   
+    initiate St with S0 and v0 (at-the-money volatility)
 Measure European Call price as discounted mean of payoff via Monte-Carlo simulation
 Calculate Implied Volatility using Black-Scholes 
     volatility from B-S such that Call_BS = Call_heston
@@ -119,7 +119,6 @@ class Heston_Volatility:
         '''        
         r=self.r; T=self.T; S0=self.S0; T0=T-T
         St = self.St_heston_simu(n_paths)
-        
         ivol = []
         
         for K in Ks:
@@ -131,7 +130,7 @@ class Heston_Volatility:
             
             ivol.append(iv)
         
-        return ivol
+        return St, ivol
     
     def St_heston(self):
         '''
