@@ -10,7 +10,9 @@ Implement security price with dynamic St-volatility, under Q-probability measure
     stock return follows risk-free interest rate 
     St-diffusion and Vt-diffusion are correlated by rho, <dWtS, dWtv> = rho dt   
     initiate St with S0 and v0 (at-the-money volatility)
-Measure European Call price as discounted mean of payoff via Monte-Carlo simulation
+Measure European Call price 
+    discounted mean of payoff via Monte-Carlo simulation
+    Monte-Carlo option payoff is calcuated off of 10000 St paths
 Calculate Implied Volatility using Black-Scholes 
     volatility from B-S such that Call_BS = Call_heston
     with optimizer, to solve for volatility at various Ks and same expiry date
