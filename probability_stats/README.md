@@ -8,11 +8,11 @@ Log-Normal Distribution
 Chi-Squared Distribution
 
 Geometric Distribution
-a. total trials of reaching a success, including the success \\\\
-$E[Geom] = \frac{1}{p}$
+a. total trials of reaching a success, including the success 
+<br />$E[Geom] = \frac{1}{p}$
 
-b. total trials of failure before reaching a success \\\\
-$E[Geom_f] = \frac{1}{p} - 1 = \frac{1-p}{p}$
+b. total trials of failure before reaching a success 
+<br />$E[Geom_f] = \frac{1}{p} - 1 = \frac{1-p}{p}$
 
 Negative Binomial Distribution
 
