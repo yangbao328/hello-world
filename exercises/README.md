@@ -26,8 +26,8 @@
 - with Tail appears, keep current payout or forfeit it to play one more round
     - N: total number of flips til the first tail, **inclusive** of the tail flip; N~Geom($\frac{1}{2}$)
     - $E[Heads] = \frac{1}{p} - 1$
-    - situation to forfeit: first-round payout < $E[h_payout * (N-1)]$
-        - where $E[h_payout * (N-1)]$ measures a fresh-round payout since hasn't flipped a tail
+    - situation to forfeit: first-round payout < $E[h_{payout} * (N-1)]$
+        - where $E[h_{payout} * (N-1)]$ measures a fresh-round payout since hasn't flipped a tail
         - as first-round turns to be Head, it's equivalent to start the game fresh
       
 ### Optimal stopping 
@@ -35,7 +35,7 @@
     - stopping cutoff, $max (x_t, V_{t+1})$
     - $E[max(x_t, V_{t+1})] = \int_{0}^{V_{t+1}} V_{t+1} + \int_{V_{t+1}}^{1} x dx$      ~ Bellman Equation
 - with two fair dices, when both dices don't roll out 1, accumulate face value to running total; if either dice rolls a 1, the game stops and lose the sum.
-    - running sum to be E[cumulative sum + expected-2-dice-sum] = P(2 dices not rolling 1) * E[Sum + 2*$\frac{2+3+4+5+6}{5}$] = E[Sum + 2*4] + P(2 dices rolling 1) * 0
+    - running sum to be E[Sum + expected-2-dice-sum] = P(2 dices not rolling 1) * E[Sum + 2* $\frac{2+3+4+5+6}{5}$ ] = E[Sum + 2*4] + P(2 dices rolling 1) * 0
       
 ### distinct-item set
 - each of 5 boxes has 1 coupon drawn uniformly random without replacement. Number of boxes to acquire for collecting at least each of 5 coupons
