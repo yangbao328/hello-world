@@ -34,5 +34,12 @@
 - stop and collect $x_t$ or reach $x_n$ and forced to take $x_n$
     - stopping cutoff, $max (x_t, V_{t+1})$
     - $E[max(x_t, V_{t+1})] = \int_{0}^{V_{t+1}} V_{t+1} + \int_{V_{t+1}}^{1} x dx$      ~ Bellman Equation
-    - 
-### Coupon collector
+- with two fair dices, when both dices don't roll out 1, accumulate face value to running total; if either dice rolls a 1, the game stops and lose the sum.
+    - running sum to be E[cumulative sum + expected-2-dice-sum] = P(2 dices not rolling 1) * E[Sum + 2*$\frac{2+3+4+5+6}{5}$] = E[Sum + 2*4] + P(2 dices rolling 1) * 0
+      
+### distinct-item set
+- each of 5 boxes has 1 coupon drawn uniformly random without replacement. Number of boxes to acquire for collecting at least each of 5 coupons
+
+- 4 distinct cards in a set, 6 independent set; E[unique cards in total]
+
+- with 2 fair dices, E[larger of 2 numbers]
