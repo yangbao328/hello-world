@@ -6,7 +6,6 @@
 - $E[M] = \int_{0}^{1} t*p(t)dt$ 
 - where p(t) defines probability density function
 
-
 ### Choices available
 - passengers with one lost ticket to seat uniformly random
     - first passenger seating situation + all rest passengers
@@ -19,27 +18,38 @@
     - first audience seating situation + all rest audience
     - $1 + \sum_{i=1}^{n} max(0,left seatings) + max(0,rightseatings) = 1 + \frac{2}{n}$ * $\sum_{i}^{n-2} f(i)$
 
-### Payoff, card game and coin-flipping game
-- stop game when reach repetitive value {1, 2, 3, 1, 2, 3}
-    - expected payout given last-roll result
-    - earnings at each round
-- with Tail appears, keep current payout or forfeit it to play one more round
-    - N: total number of flips til the first tail, **inclusive** of the tail flip; N~Geom($\frac{1}{2}$)
-    - $E[Heads] = \frac{1}{p} - 1$
-    - situation to forfeit: first-round payout < $E[h_{payout} * (N-1)]$
-        - where $E[h_{payout} * (N-1)]$ measures a fresh-round payout since hasn't flipped a tail
-        - as first-round turns to be Head, it's equivalent to start the game fresh
-      
 ### Optimal stopping 
 - stop and collect $x_t$ or reach $x_n$ and forced to take $x_n$
     - stopping cutoff, $max (x_t, V_{t+1})$
     - $E[max(x_t, V_{t+1})] = \int_{0}^{V_{t+1}} V_{t+1} + \int_{V_{t+1}}^{1} x dx$      ~ Bellman Equation
 - with two fair dices, when both dices don't roll out 1, accumulate face value to running total; if either dice rolls a 1, the game stops and lose the sum.
     - running sum to be E[Sum + expected-2-dice-sum] = P(2 dices not rolling 1) * E[Sum + 2* $\frac{2+3+4+5+6}{5}$ ] = E[Sum + 2*4] + P(2 dices rolling 1) * 0
+- tail-result reflip with cost
+- with Tail appears, keep current payout or forfeit it to play one more round 
+    - N: total number of flips til the first tail, **inclusive** of the tail flip;
+    - N~Geom($\frac{1}{2}$), $E[Heads] = \frac{1}{p} - 1$
+    - situation to forfeit: first-round payout < $E[h_{payout} * (N-1)]$
+        - where $E[h_{payout} * (N-1)]$ measures a fresh-round payout since hasn't flipped a tail
+        - as first-round turns to be Head, it's equivalent to start the game fresh
+  
+### Recursion, recurrence at uniformly random probabilities
+- cost of current step: 1
+- additional step to reach a state given current state
+    - E[filps until both head and tail]
+    - E[steps to cover all edges of a triangle]
+    - stop game when reach repetitive value {1, 2, 3, 1, 2, 3}
+        - expected payout given last-roll result
+        - earnings at each round
+- absorbing state at 0 and N, $E_0 = E_N = 0$
+    - Exit time of a random walk
+    - $E_k = 1 + \frac{1}{2} E_{K-1} + \frac{1}{2} E_{k+1}$
       
-### distinct-item set
+### Distinct-item set, indicator function
 - each of 5 boxes has 1 coupon drawn uniformly random without replacement. Number of boxes to acquire for collecting at least each of 5 coupons
 
 - 4 distinct cards in a set, 6 independent set; E[unique cards in total]
 
 - with 2 fair dices, E[larger of 2 numbers]
+
+- rolling a dice 5 times, X and Y each be number of appearance for two number
+  
